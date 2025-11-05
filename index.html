@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PassX Password Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #300
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        #instruction {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        input {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .add-btn {
+            padding: 15px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .add-btn:hover {
+            background: #218838;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        li {
+            background: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5a6fd8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PassX Password Manager</h1>
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button class="add-btn" onclick="addEntry()">Add Entry</button>
+        </div>
+        <div id="instruction">Achtung: Erst eintippen und dann "Neuer Eintrag" drücken für Download.</div>
+        <ul id="entries"></ul>
+        <button onclick="downloadPasswords()">Download Passwords</button>
+        <button onclick="downloadApp()" style="margin-top: 10px; background: #dc3545;">App herunterladen</button>
+        <div style="margin-top: 20px;">
+            <label for="language">Language:</label>
+            <select id="language" onchange="changeLanguage()">
+                <option value="en">English</option>
+                <option value="de">Deutsch</option>
+                <option value="it">Italiano</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="zh">中文</option>
+                <option value="ja">日本語</option>
+                <option value="ru">Русский</option>
+                <option value="ar">العربية</option>
+                <option value="pt">Português</option>
+                <option value="hi">हिन्दी</option>
+                <option value="ko">한국어</option>
+                <option value="nl">Nederlands</option>
+                <option value="sv">Svenska</option>
+                <option value="da">Dansk</option>
+                <option value="no">Norsk</option>
+                <option value="fi">Suomi</option>
+                <option value="pl">Polski</option>
+                <option value="tr">Türkçe</option>
+            </select>
+        </div>
+    </div>
+
+    <script>
+        let entries = [];
+        let currentLang = 'en';
+
+        const translations = {
+            en: {
+                title: 'PassX Password Manager',
+                usernamePlaceholder: 'Username',
+                passwordPlaceholder: 'Password',
+                addEntry: 'Add Entry',
+                download: 'Download Passwords',
+                downloadApp: 'Download App',
+                language: 'Language:',
+                alertEmpty: 'Please enter both username and password.',
+                alertNoEntries: 'Please add some entries first.',
+                listSeparator: ' | ',
+                instruction: 'Attention: First enter and then press "Add Entry" for download.'
+            },
+            de: {
+                title: 'PassX Passwort-Manager',
+                usernamePlaceholder: 'Benutzername',
+                passwordPlaceholder: 'Passwort',
+                addEntry: 'Eintrag hinzufügen',
+                download: 'Passwörter herunterladen',
+                downloadApp: 'App herunterladen',
+                language: 'Sprache:',
+                alertEmpty: 'Bitte geben Sie sowohl Benutzername als auch Passwort ein.',
+                alertNoEntries: 'Bitte fügen Sie einige Einträge hinzu.',
+                listSeparator: ' | ',
+                instruction: 'Achtung: Erst eintippen und dann "Eintrag hinzufügen" drücken für Download.'
+            },
+            it: {
+                title: 'PassX Gestore Password',
+                usernamePlaceholder: 'Nome utente',
+                passwordPlaceholder: 'Password',
+                addEntry: 'Aggiungi Voce',
+                download: 'Scarica Password',
+                downloadApp: 'Scarica App',
+                language: 'Lingua:',
+                alertEmpty: 'Inserisci sia nome utente che password.',
+                alertNoEntries: 'Aggiungi alcune voci prima.',
+                listSeparator: ' | ',
+                instruction: 'Attenzione: Prima inserisci e poi premi "Aggiungi Voce" per scaricare.'
+            },
+            fr: {
+                title: 'Gestionnaire de Mots de Passe PassX',
+                usernamePlaceholder: 'Nom d\'utilisateur',
+                passwordPlaceholder: 'Mot de passe',
+                addEntry: 'Ajouter une Entrée',
+                download: 'Télécharger les Mots de Passe',
+                downloadApp: 'Télécharger App',
+                language: 'Langue:',
+                alertEmpty: 'Veuillez saisir le nom d\'utilisateur et le mot de passe.',
+                alertNoEntries: 'Veuillez ajouter des entrées d\'abord.',
+                listSeparator: ' | ',
+                instruction: 'Attention: D\'abord saisir puis appuyer sur "Ajouter une Entrée" pour télécharger.'
+            },
+            es: {
+                title: 'Gestor de Contraseñas PassX',
+                usernamePlaceholder: 'Nombre de usuario',
+                passwordPlaceholder: 'Contraseña',
+                addEntry: 'Agregar Entrada',
+                download: 'Descargar Contraseñas',
+                language: 'Idioma:',
+                alertEmpty: 'Por favor ingrese tanto el nombre de usuario como la contraseña.',
+                alertNoEntries: 'Por favor agregue algunas entradas primero.',
+                listSeparator: ' | ',
+                instruction: 'Atención: Primero ingrese y luego presione "Agregar Entrada" para descargar.'
+            },
+            zh: {
+                title: 'PassX 密码管理器',
+                usernamePlaceholder: '用户名',
+                passwordPlaceholder: '密码',
+                addEntry: '添加条目',
+                download: '下载密码',
+                language: '语言:',
+                alertEmpty: '请输入用户名和密码。',
+                alertNoEntries: '请先添加一些条目。',
+                listSeparator: ' | ',
+                instruction: '注意：先输入，然后按“添加条目”下载。'
+            },
+            ja: {
+                title: 'PassX パスワードマネージャー',
+                usernamePlaceholder: 'ユーザー名',
+                passwordPlaceholder: 'パスワード',
+                addEntry: 'エントリを追加',
+                download: 'パスワードをダウンロード',
+                language: '言語:',
+                alertEmpty: 'ユーザー名とパスワードの両方を入力してください。',
+                alertNoEntries: 'まず、いくつかのエントリを追加してください。',
+                listSeparator: ' | ',
+                instruction: '注意：まず入力し、次に「エントリを追加」を押してダウンロードしてください。'
+            },
+            ru: {
+                title: 'Менеджер Паролей PassX',
+                usernamePlaceholder: 'Имя пользователя',
+                passwordPlaceholder: 'Пароль',
+                addEntry: 'Добавить Запись',
+                download: 'Скачать Пароли',
+                language: 'Язык:',
+                alertEmpty: 'Пожалуйста, введите имя пользователя и пароль.',
+                alertNoEntries: 'Пожалуйста, добавьте записи сначала.',
+                listSeparator: ' | ',
+                instruction: 'Внимание: Сначала введите, затем нажмите "Добавить запись" для загрузки.'
+            },
+            ar: {
+                title: 'مدير كلمات المرور PassX',
+                usernamePlaceholder: 'اسم المستخدم',
+                passwordPlaceholder: 'كلمة المرور',
+                addEntry: 'إضافة إدخال',
+                download: 'تحميل كلمات المرور',
+                language: 'اللغة:',
+                alertEmpty: 'يرجى إدخال اسم المستخدم وكلمة المرور.',
+                alertNoEntries: 'يرجى إضافة بعض الإدخالات أولاً.',
+                listSeparator: ' | ',
+                instruction: 'تنبيه: أدخل أولاً ثم اضغط على "إضافة إدخال" للتحميل.'
+            },
+            pt: {
+                title: 'Gerenciador de Senhas PassX',
+                usernamePlaceholder: 'Nome de usuário',
+                passwordPlaceholder: 'Senha',
+                addEntry: 'Adicionar Entrada',
+                download: 'Baixar Senhas',
+                language: 'Idioma:',
+                alertEmpty: 'Por favor, insira o nome de usuário e a senha.',
+                alertNoEntries: 'Por favor, adicione algumas entradas primeiro.',
+                listSeparator: ' | ',
+                instruction: 'Atenção: Primeiro insira e depois pressione "Adicionar Entrada" para baixar.'
+            },
+            hi: {
+                title: 'PassX पासवर्ड प्रबंधक',
+                usernamePlaceholder: 'उपयोगकर्ता नाम',
+                passwordPlaceholder: 'पासवर्ड',
+                addEntry: 'प्रविष्टि जोड़ें',
+                download: 'पासवर्ड डाउनलोड करें',
+                language: 'भाषा:',
+                alertEmpty: 'कृपया उपयोगकर्ता नाम और पासवर्ड दोनों दर्ज करें।',
+                alertNoEntries: 'कृपया पहले कुछ प्रविष्टियाँ जोड़ें।',
+                listSeparator: ' | ',
+                instruction: 'ध्यान: पहले दर्ज करें और फिर डाउनलोड के लिए "प्रविष्टि जोड़ें" दबाएं।'
+            },
+            ko: {
+                title: 'PassX 비밀번호 관리자',
+                usernamePlaceholder: '사용자 이름',
+                passwordPlaceholder: '비밀번호',
+                addEntry: '항목 추가',
+                download: '비밀번호 다운로드',
+                language: '언어:',
+                alertEmpty: '사용자 이름과 비밀번호를 모두 입력하세요.',
+                alertNoEntries: '먼저 몇 가지 항목을 추가하세요.',
+                listSeparator: ' | ',
+                instruction: '주의: 먼저 입력한 다음 다운로드하려면 "항목 추가"를 누르세요.'
+            },
+            nl: {
+                title: 'PassX Wachtwoordbeheer',
+                usernamePlaceholder: 'Gebruikersnaam',
+                passwordPlaceholder: 'Wachtwoord',
+                addEntry: 'Item Toevoegen',
+                download: 'Wachtwoorden Downloaden',
+                language: 'Taal:',
+                alertEmpty: 'Voer zowel gebruikersnaam als wachtwoord in.',
+                alertNoEntries: 'Voeg eerst enkele items toe.',
+                listSeparator: ' | ',
+                instruction: 'Let op: Voer eerst in en druk dan op "Item Toevoegen" voor download.'
+            },
+            sv: {
+                title: 'PassX Lösenordschef',
+                usernamePlaceholder: 'Användarnamn',
+                passwordPlaceholder: 'Lösenord',
+                addEntry: 'Lägg Till Post',
+                download: 'Ladda Ner Lösenord',
+                language: 'Språk:',
+                alertEmpty: 'Ange både användarnamn och lösenord.',
+                alertNoEntries: 'Lägg till några poster först.',
+                listSeparator: ' | ',
+                instruction: 'Observera: Ange först och tryck sedan på "Lägg Till Post" för nedladdning.'
+            },
+            da: {
+                title: 'PassX Adgangskode Manager',
+                usernamePlaceholder: 'Brugernavn',
+                passwordPlaceholder: 'Adgangskode',
+                addEntry: 'Tilføj Indtastning',
+                download: 'Download Adgangskoder',
+                downloadApp: 'Download App',
+                language: 'Sprog:',
+                alertEmpty: 'Indtast både brugernavn og adgangskode.',
+                alertNoEntries: 'Tilføj nogle indtastninger først.',
+                listSeparator: ' | ',
+                instruction: 'Bemærk: Indtast først og tryk derefter på "Tilføj Indtastning" for download.'
+            },
+            no: {
+                title: 'PassX Passordbehandler',
+                usernamePlaceholder: 'Brukernavn',
+                passwordPlaceholder: 'Passord',
+                addEntry: 'Legg Til Oppføring',
+                download: 'Last Ned Passord',
+                downloadApp: 'Last Ned App',
+                language: 'Språk:',
+                alertEmpty: 'Skriv inn både brukernavn og passord.',
+                alertNoEntries: 'Legg til noen oppføringer først.',
+                listSeparator: ' | ',
+                instruction: 'Merk: Skriv inn først og trykk deretter på "Legg Til Oppføring" for nedlasting.'
+            },
+            fi: {
+                title: 'PassX Salasanojen Hallinta',
+                usernamePlaceholder: 'Käyttäjänimi',
+                passwordPlaceholder: 'Salasana',
+                addEntry: 'Lisää Merkintä',
+                download: 'Lataa Salasanat',
+                downloadApp: 'Lataa Sovellus',
+                language: 'Kieli:',
+                alertEmpty: 'Syötä sekä käyttäjänimi että salasana.',
+                alertNoEntries: 'Lisää ensin joitakin merkintöjä.',
+                listSeparator: ' | ',
+                instruction: 'Huomio: Syötä ensin ja paina sitten "Lisää Merkintä" ladataksesi.'
+            },
+            pl: {
+                title: 'Menedżer Haseł PassX',
+                usernamePlaceholder: 'Nazwa użytkownika',
+                passwordPlaceholder: 'Hasło',
+                addEntry: 'Dodaj Wpis',
+                download: 'Pobierz Hasła',
+                downloadApp: 'Pobierz Aplikację',
+                language: 'Język:',
+                alertEmpty: 'Wprowadź nazwę użytkownika i hasło.',
+                alertNoEntries: 'Najpierw dodaj niektóre wpisy.',
+                listSeparator: ' | ',
+                instruction: 'Uwaga: Najpierw wprowadź, a następnie naciśnij "Dodaj Wpis" w celu pobrania.'
+            },
+            tr: {
+                title: 'PassX Şifre Yöneticisi',
+                usernamePlaceholder: 'Kullanıcı adı',
+                passwordPlaceholder: 'Şifre',
+                addEntry: 'Giriş Ekle',
+                download: 'Şifreleri İndir',
+                downloadApp: 'Uygulamayı İndir',
+                language: 'Dil:',
+                alertEmpty: 'Lütfen kullanıcı adı ve şifreyi girin.',
+                alertNoEntries: 'Önce bazı girişler ekleyin.',
+                listSeparator: ' | ',
+                instruction: 'Dikkat: Önce girin ve ardından indirmek için "Giriş Ekle"ye basın.'
+            }
+        };
+
+        function changeLanguage() {
+            currentLang = document.getElementById('language').value;
+            updateUI();
+        }
+
+        function updateUI() {
+            const t = translations[currentLang];
+            document.querySelector('h1').textContent = t.title;
+            document.getElementById('username').placeholder = t.usernamePlaceholder;
+            document.getElementById('password').placeholder = t.passwordPlaceholder;
+            document.querySelector('.add-btn').textContent = t.addEntry;
+            document.querySelector('button[onclick="downloadPasswords()"]').textContent = t.download;
+            document.querySelector('button[onclick="downloadApp()"]').textContent = t.downloadApp || 'Download App';
+            document.querySelector('label[for="language"]').textContent = t.language;
+            document.getElementById('instruction').textContent = t.instruction || 'Attention: First enter and then press "Add Entry" for download.';
+            updateDisplay();
+        }
+
+        function addEntry() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            if (!username || !password) {
+                alert(translations[currentLang].alertEmpty);
+                return;
+            }
+            entries.push({ username, password });
+            updateDisplay();
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function updateDisplay() {
+            const ul = document.getElementById('entries');
+            ul.innerHTML = '';
+            const t = translations[currentLang];
+            entries.forEach(entry => {
+                const li = document.createElement('li');
+                li.textContent = `Username: ${entry.username}${t.listSeparator}Password: ${entry.password}`;
+                ul.appendChild(li);
+            });
+        }
+
+        function downloadPasswords() {
+            if (entries.length === 0) {
+                alert(translations[currentLang].alertNoEntries);
+                return;
+            }
+            let content = `
+╔══════════════════════════════════════════════╗
+║                                              ║
+║                 P A S S X                    ║
+║                                              ║
+║              Password Manager                ║
+║                                              ║
+╚══════════════════════════════════════════════╝
+
+`;
+            entries.forEach((entry, index) => {
+                content += `
+┌──────────────────────────────────────────────┐
+│ Entry ${index + 1}                                   │
+├──────────────────────────────────────────────┤
+│ Username: ${entry.username.padEnd(30)} │
+│ Password: ${entry.password.padEnd(30)} │
+└──────────────────────────────────────────────┘
+
+`;
+            });
+            content += `
+╔══════════════════════════════════════════════╗
+║                                              ║
+║        . . .   . . .   . . .   . . .   .     .        ║
+║        .   .   .     .   .       .   .   .   .        ║
+║        . . .   . . . .   . . .   . . .   . . .        ║
+║        .       .     .       .       .   .        ║
+║        .       .     .       .       .     .        ║
+║                                              ║
+╚══════════════════════════════════════════════╝
+
+Thx for using PassX
+`;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'passwords.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadApp() {
+            const link = document.createElement('a');
+            link.href = 'PassX-App.zip';
+            link.download = 'PassX-App.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>
